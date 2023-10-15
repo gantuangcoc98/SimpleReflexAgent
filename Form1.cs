@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -27,7 +28,7 @@ namespace Simple_Reflex_Agent
         }
 
         private int quadrant = new Random().Next(4);
-        private int prevQuadrant = 0;
+        private string status;
         private void pictureBox1_Paint(object sender, PaintEventArgs e)
         {
             Graphics g = e.Graphics;
@@ -51,42 +52,26 @@ namespace Simple_Reflex_Agent
             g.DrawLine(pen, x, yCenter, x + xSize, yCenter);
 
             Rectangle border = new Rectangle(x, y, xSize/2, ySize/2);
-            int newQuadrant = randomizer.Next(2);
             switch (quadrant)
             {
                 case 0:
                     border.X = xCenter;
-                    prevQuadrant = quadrant;
-                    quadrant = (newQuadrant == 0) ? 1 : 3;  // randomizer transfer of the vacuum robot (UP, DOWN, LEFT, RIGHT)
                     break;
 
                 case 1:
-                    prevQuadrant = quadrant;
-                    quadrant = (newQuadrant == 0) ? 0 : 2; // randomizer transfer of the vacuum robot (UP, DOWN, LEFT, RIGHT)
                     break;
 
                 case 2:
-                    prevQuadrant = quadrant;
                     border.Y = yCenter;
-                    quadrant = (newQuadrant == 0) ? 1 : 3; // randomizer transfer of the vacuum robot (UP, DOWN, LEFT, RIGHT)
                     break;
 
                 case 3:
-                    prevQuadrant = quadrant;
                     border.X = xCenter;
                     border.Y = yCenter;
-                    quadrant = (newQuadrant == 0) ? 0 : 2; // randomizer transfer of the vacuum robot (UP, DOWN, LEFT, RIGHT)
                     break;
             }
             g.DrawEllipse(pen, border);
         }
-
-        private void timer1_Tick(object sender, EventArgs e)
-        {
-            pictureBox1.Refresh();
-            check(prevQuadrant);
-        }
-
         private void textLabels()
         {
             quadrant1.Text = (randomizer.Next(2) == 1) ? "CLEAN" : "DIRTY";
@@ -95,21 +80,84 @@ namespace Simple_Reflex_Agent
             quadrant4.Text = (randomizer.Next(2) == 1) ? "CLEAN" : "DIRTY";
         }
 
+        private int step = 1;
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            switch(step)
+            {
+                case 1:
+                    move(quadrant);
+                    break;
+                case 2:
+                    check(quadrant); break;
+                case 3:
+                    operation(quadrant); break;
+            }
+            if (step++ == 3) step = 1;
+        }
+
+        private void move(int quadrant)
+        {
+            int newQuadrant = randomizer.Next(2);
+            switch(quadrant)
+            {
+                case 0:
+                    status = quadrant1.Text;
+                    quadrant1.Text = (status == "NOP" || status == "CLEANING") ? "CLEANED" : status;
+                    this.quadrant = (newQuadrant == 0) ? 1: 3;
+                    break;
+                case 1:
+                    status = quadrant2.Text;
+                    quadrant2.Text = (status == "NOP" || status == "CLEANING") ? "CLEANED" : status;
+                    this.quadrant = (newQuadrant == 0) ? 0 : 2; break;
+                case 2:
+                    status = quadrant3.Text;
+                    quadrant3.Text = (status == "NOP" || status == "CLEANING") ? "CLEANED" : status;
+                    this.quadrant = (newQuadrant == 0) ? 1 : 3; break;
+                case 3:
+                    status = quadrant4.Text;
+                    quadrant4.Text = (status == "NOP" || status == "CLEANING") ? "CLEANED" : status;
+                    this.quadrant = (newQuadrant == 0) ? 0 : 2; break;
+            }
+            pictureBox1.Refresh();
+        }
+        
         private void check(int quadrant)
         {
             switch (quadrant)
             {
                 case 0:
+                    status = quadrant1.Text;
                     quadrant1.Text = "CHECKING";
                     break;
                 case 1:
+                    status = quadrant2.Text;
                     quadrant2.Text = "CHECKING";
                     break;
                 case 2:
+                    status = quadrant3.Text;
                     quadrant3.Text = "CHECKING";
                     break;
                 case 3:
+                    status = quadrant4.Text;
                     quadrant4.Text = "CHECKING";
+                    break;
+            }
+        }
+
+        private void operation(int quadrant) {
+            switch(quadrant) {
+                case 0:
+                    quadrant1.Text = (status == "CLEAN" || status == "CLEANED") ? "NOP" : "CLEANING";
+                    break;
+                case 1:
+                    quadrant2.Text = (status == "CLEAN" || status == "CLEANED") ? "NOP" : "CLEANING";
+                    break;
+                case 2:
+                    quadrant3.Text = (status == "CLEAN" || status == "CLEANED") ? "NOP" : "CLEANING";
+                    break;
+                case 3:
+                    quadrant4.Text = (status == "CLEAN" || status == "CLEANED") ? "NOP" : "CLEANING";
                     break;
             }
         }
